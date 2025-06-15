@@ -1,1 +1,660 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Code Editor</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" /><link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" /><script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ext-language_tools.min.js"></script><script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify.js"></script><script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-css.js"></script><script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-html.js"></script><style>body{ font-family: "Inter", sans-serif;} .editor-pane, #editor-area, #preview{ transition: width 0.2s ease, height 0.2s ease;} :root{ --resize-bar-thickness: 20px;} .resize-handle-x{ cursor: col-resize; flex: 0 0 var(--resize-bar-thickness) !important; width: var(--resize-bar-thickness) !important; background-color: #1c1c1c; height: 100%; margin: 0; padding: 0; border: none; box-shadow: none;} .resize-handle-y{ cursor: row-resize; flex: 0 0 var(--resize-bar-thickness) !important; height: var(--resize-bar-thickness) !important; background-color: #1c1c1c; width: 100%; margin: 0; padding: 0; border: none; box-shadow: none;} .editor-pane{ background-color: #262626;} .editor-header{ background-color: #1c1c1c !important; color: #ffffff8e !important; border-bottom: 1px solid #444444; } body::-webkit-scrollbar{ display: none;} body{ -ms-overflow-style: none; scrollbar-width: none;} .editor-pane, #html-editor-container, #css-editor-container, #js-editor-container{ margin: 0 !important; padding: 0 !important; border: none !important; background-clip: padding-box; } .ace_editor{ border: none !important; box-shadow: none !important;} .ace_gutter{ background: #1d1e22 !important; color: #34363e !important; } .editor-header, .editor-header:focus{ outline: none !important; box-shadow: none !important;} .editor-header, .editor-header:focus, .editor-header *:focus, .editor-header:active, .editor-header *:active{ outline: none !important; box-shadow: none !important; border: none !important;} /* For horizontal resizer bars (code panes): Add border on the left and right but none on top and bottom */ .resize-handle-x{ border-left: 1px solid #2d2d2d; border-right: 1px solid #2d2d2d; border-top: none; border-bottom: none;} /* For vertical resizer bar (between editors and preview): Add border on the top and bottom but none on left and right */ .resize-handle-y{ border-top: 1px solid #2d2d2d; border-bottom: 1px solid #2d2d2d; border-left: none; border-right: none;} #editIcon:hover{ animation: pulse 1.5s infinite;} @keyframes pulse{ 0%{ opacity: 1; transform: scale(1);} 50%{ opacity: 0.7; transform: scale(1.1);} 100%{ opacity: 1; transform: scale(1);}} ::-webkit-scrollbar{ width: 12px;} ::-webkit-scrollbar-track{ background: #1d1e22;} ::-webkit-scrollbar-thumb{ background: #666b7a;} ::-webkit-scrollbar-thumb:hover{ background: #666b7a;} .ace_editor .ace_cursor{ width: 0.5px !important; height: 1.65em !important; } [contenteditable]:focus{ outline: none !important; box-shadow: none !important;} @keyframes vsCodeCursor{ 0%, 100%{ transform: scaleY(0.9);} 50%{ transform: scaleY(0);}} .ace_editor.ace_focus .ace_cursor{ animation: vsCodeCursor 1s infinite ease-in-out !important;} .ace_editor:not(.ace_focus) .ace_cursor{ animation: none !important;} </style></head><body class="bg-gray-900 text-gray-200 flex flex-col h-screen overflow-hidden" ><header style="height: 65px" class="bg-black text-white p-3 flex justify-between items-center border-b border-gray-700 shadow-md" ><div class="flex items-center"><span class="material-icons text-red-500 mr-2 text-2xl" >javascript</span ><div><div class="flex items-center"><h1 id="filename" class="text-lg font-semibold">Untitled</h1><span id="editIcon" class="material-icons cursor-pointer text-base ml-1" >edit</span ></div><p id="captainName" class="text-xs text-gray-400">Captain Anonymous </p></div></div><div class="flex items-center space-x-2"><button onclick="prettifyCode()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center" ><span class="material-icons mr-1 text-base">done_all</span>Prettify </button></div></header><div class="flex flex-col flex-grow overflow-hidden"><div id="editor-area" class="flex flex-grow h-3/5 border-b border-gray-800" ><div class="flex-1 flex flex-col editor-pane" id="html-editor-container" ><div class="editor-header relative border-b border-gray-700" style="height: 35px;"><div class="absolute inset-y-0 left-0 flex items-center px-3" style="background-color: #1d1e22; border-top: 3px solid #34363e" ><svg viewBox="0 0 15 15" class="file-type-icon mr-2 w-5 h-4" id="icon-file-html" ><rect fill="#FF3C41" width="15" height="15" rx="4"></rect><path d="M10.97 2.29a.563.563 0 0 0-.495-.29.572.572 0 0 0-.488.277l-5.905 9.86a.565.565 0 0 0-.007.574c.102.18.287.289.495.289a.572.572 0 0 0 .488-.277l5.905-9.86a.565.565 0 0 0 .007-.574" fill="#28282B" ></path></svg><span class="font-medium text-sm">HTML</span></div></div><div id="html-editor" class="flex-grow"></div></div><div class="resize-handle-x"></div><div class="flex-1 flex flex-col editor-pane" id="css-editor-container"><div class="editor-header relative border-b border-gray-700" style="height: 35px;"><div class="absolute inset-y-0 left-0 flex items-center px-3" style="background-color: #1d1e22; border-top: 3px solid #34363e" ><svg viewBox="0 0 15 15" class="file-type-icon mr-2 w-6 h-4" id="icon-file-css" ><rect fill="#0EBEFF" width="15" height="15" rx="4"></rect><path d="M8 8.366l1.845 1.065a.507.507 0 0 0 .686-.181.507.507 0 0 0-.186-.685L8.5 7.5l1.845-1.065a.507.507 0 0 0 .186-.685.507.507 0 0 0-.686-.181L8 6.634v-2.13A.507.507 0 0 0 7.5 4c-.268 0-.5.225-.5.503v2.131L5.155 5.569a.507.507 0 0 0-.686.181.507.507 0 0 0 .186.685L6.5 7.5 4.655 8.565a.507.507 0 0 0-.186.685c.134.232.445.32.686.181L7 8.366v2.13c0 .271.224.504.5.504.268 0 .5-.225.5-.503V8.366z" fill="#282828" ></path></svg><span class="font-medium text-sm">CSS</span></div></div><div id="css-editor" class="flex-grow"></div></div><div class="resize-handle-x"></div><div class="flex-1 flex flex-col editor-pane" id="js-editor-container"><div class="editor-header relative border-b border-gray-700" style="height: 35px;"><div class="absolute inset-y-0 left-0 flex items-center px-3" style="background-color: #1d1e22; border-top: 3px solid #34363e" ><svg viewBox="0 0 15 15" class="file-type-icon mr-2 w-6 h-4" id="icon-file-js" ><rect fill="#FCD000" width="15" height="15" rx="4"></rect><path d="M6.554 3.705c0 .267-.19.496-.452.543-1.2.217-2.12 1.61-2.12 3.275 0 1.665.92 3.057 2.12 3.274a.554.554 0 0 1-.205 1.087c-1.733-.322-3.022-2.175-3.022-4.361 0-2.187 1.289-4.04 3.022-4.362a.554.554 0 0 1 .657.544zm1.892 0c0-.347.316-.607.657-.544 1.733.322 3.022 2.175 3.022 4.362 0 2.186-1.289 4.04-3.022 4.361a.554.554 0 0 1-.205-1.087c1.2-.217 2.12-1.61 2.12-3.274 0-1.665-.92-3.058-2.12-3.275a.551.551 0 0 1-.452-.543z" fill="#282828" ></path></svg><span class="font-medium text-sm">JS</span></div></div><div id="js-editor" class="flex-grow"></div></div></div><div class="resize-handle-y"></div><iframe id="preview" class="flex-grow bg-gray-900" style="height: 356px;" sandbox="allow-scripts" ></iframe></div><footer class="bg-gray-800 text-gray-400 p-2 flex items-center border-t border-gray-700 text-sm" ><button id="toggleConsoleBtn" class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-white" >Console </button></footer><div id="consoleOutput" class="bg-black text-green-400 p-3 text-xs font-mono hidden overflow-y-auto max-h-48 border-t border-gray-700" ></div><script>// Initialize ACE Editors const htmlEditor=ace.edit("html-editor"); htmlEditor.setTheme("ace/theme/twilight"); htmlEditor.session.setMode("ace/mode/html"); htmlEditor.setOptions({ enableBasicAutocompletion: true, enableLiveAutocompletion: true,}); htmlEditor.setOption("highlightActiveLine", false); // Disable active line highlighting htmlEditor.renderer.setOption("highlightGutterLine", false); // Disable gutter line highlighting htmlEditor.setFontSize(15); // Set font size const cssEditor=ace.edit("css-editor"); cssEditor.setTheme("ace/theme/twilight"); cssEditor.session.setMode("ace/mode/css"); cssEditor.setOptions({ enableBasicAutocompletion: true, enableLiveAutocompletion: true,}); cssEditor.setOption("highlightActiveLine", false); // Disable active line highlighting cssEditor.renderer.setOption("highlightGutterLine", false); // Disable gutter line highlighting cssEditor.setFontSize(15); // Set font size const jsEditor=ace.edit("js-editor"); jsEditor.setTheme("ace/theme/twilight"); jsEditor.session.setMode("ace/mode/javascript"); jsEditor.setOptions({ enableBasicAutocompletion: true, enableLiveAutocompletion: true,}); jsEditor.setOption("highlightActiveLine", false); // Disable active line highlighting jsEditor.renderer.setOption("highlightGutterLine", false); // Disable gutter line highlighting jsEditor.setFontSize(15); // Set font size // Change the background color for each Ace editor container htmlEditor.container.style.backgroundColor="#1d1e22"; // or any valid CSS color cssEditor.container.style.backgroundColor="#1d1e22"; jsEditor.container.style.backgroundColor="#1d1e22"; // Horizontal Resize of Editor Panes (with smoother final transition via CSS) const resizeHandlesX=document.querySelectorAll(".resize-handle-x"); const minWidth=50; // Minimum width for each pane in pixels resizeHandlesX.forEach((handle)=>{ handle.addEventListener("mousedown", (e)=>{ e.preventDefault(); // Prevent default text selection // Get bounding rectangle of the container holding the panes const containerRect=handle.parentNode.getBoundingClientRect(); const containerLeft=containerRect.left; const containerRight=containerRect.right; const startX=e.clientX; const prevSibling=handle.previousElementSibling; const nextSibling=handle.nextElementSibling; const startWidthPrev=prevSibling.offsetWidth; const startWidthNext=nextSibling.offsetWidth; function onMouseMove(e){ let posX=e.clientX; // Limit posX so the handle stays within the container and respects min widths const limitedX=Math.max( containerLeft + minWidth, Math.min(posX, containerRight - minWidth) ); let diffX=limitedX - startX; prevSibling.style.flex="none"; nextSibling.style.flex="none"; prevSibling.style.width=startWidthPrev + diffX + "px"; nextSibling.style.width=startWidthNext - diffX + "px";} function onMouseUp(){ document.removeEventListener("mousemove", onMouseMove); document.removeEventListener("mouseup", onMouseUp);} document.addEventListener("mousemove", onMouseMove); document.addEventListener("mouseup", onMouseUp);});}); // Vertical Resize: between editor area and preview (using pointer events) const resizeHandleY=document.querySelector(".resize-handle-y"); const editorArea=document.getElementById("editor-area"); const preview=document.getElementById("preview"); resizeHandleY.addEventListener("pointerdown", (e)=>{ e.preventDefault(); // Capture pointer so that events keep firing even if the pointer moves off the element resizeHandleY.setPointerCapture(e.pointerId); const startY=e.clientY; const startEditorHeight=editorArea.offsetHeight; const startPreviewHeight=preview.offsetHeight; function onPointerMove(e){ const diffY=e.clientY - startY; editorArea.style.height=startEditorHeight + diffY + "px"; preview.style.height=startPreviewHeight - diffY + "px";} function onPointerUp(e){ resizeHandleY.releasePointerCapture(e.pointerId); document.removeEventListener("pointermove", onPointerMove); document.removeEventListener("pointerup", onPointerUp);} document.addEventListener("pointermove", onPointerMove); document.addEventListener("pointerup", onPointerUp);}); // Working Console Implementation: // The preview iframe’s srcdoc includes a script which overrides window.console to send log/error // messages via postMessage to the parent that appends the messages to the #consoleOutput panel. // Flag to track if the JS editor was modified at least once let jsEdited=false; function updatePreview(){ const html=htmlEditor.getValue(); const css=`<style>${cssEditor.getValue()}</style>`; let jsBlock=""; const currentJS=jsEditor.getValue(); // Only inject the JS block after the first edit if (jsEdited){ jsBlock=`<script>window.console={ log: (...args)=>parent.postMessage({ type: 'log', args}, '*'), error: (...args)=>parent.postMessage({ type: 'error', args}, '*')}; try{ ${currentJS}} catch(e){ parent.postMessage({ type: 'error', args: [e.toString()]}, '*');} <\/script>`;} preview.srcdoc=html + css + jsBlock;} // Listen for JS changes jsEditor.on("change", ()=>{ // On the first change, mark that JS was edited if (!jsEdited){ jsEdited=true;} // Clear console and update preview document.getElementById("consoleOutput").textContent=""; updatePreview();}); // Update preview on blur for HTML and CSS editors htmlEditor.on("blur", updatePreview); cssEditor.on("blur", updatePreview); // (Optional) Call updatePreview() at init—but without JS block injected since jsEdited is false. updatePreview(); // Listen for console messages from the preview frame. window.addEventListener("message", (e)=>{ const msg=e.data; const consoleEl=document.getElementById("consoleOutput"); if (msg.type==="log"){ consoleEl.textContent +=msg.args.join(" ") + "\n";} else if (msg.type==="error"){ consoleEl.textContent +="Error: " + msg.args.join(" ") + "\n";} consoleEl.scrollTop=consoleEl.scrollHeight;}); // Toggle Console with Anime.js animation (smooth opening/closing) const toggleBtn=document.getElementById("toggleConsoleBtn"); const consoleEl=document.getElementById("consoleOutput"); let consoleVisible=false; toggleBtn.addEventListener("click", ()=>{ if (!consoleVisible){ consoleEl.classList.remove("hidden"); anime({ targets: "#consoleOutput", height: ["0px", "200px"], opacity: [0, 1], duration: 400, easing: "easeOutQuad",});} else{ anime({ targets: "#consoleOutput", height: 0, opacity: 0, duration: 300, easing: "easeInQuad", complete: ()=>consoleEl.classList.add("hidden"),});} consoleVisible=!consoleVisible;}); // Prettify Code Function: formats each editor's content using js-beautify. function prettifyCode(){ const htmlCode=htmlEditor.getValue(); const cssCode=cssEditor.getValue(); const jsCode=jsEditor.getValue(); htmlEditor.setValue(html_beautify(htmlCode), -1); cssEditor.setValue(css_beautify(cssCode), -1); jsEditor.setValue(js_beautify(jsCode), -1); updatePreview();} document.addEventListener("DOMContentLoaded", function (){ const filename=document.getElementById("filename"); const editIcon=document.getElementById("editIcon"); // Initialize lastSaved with the current value or default "Untitled" let lastSaved=filename.innerText.trim() || "Untitled"; // Ensure editing is off by default. filename.setAttribute("contenteditable", "false"); editIcon.addEventListener("click", function (e){ // Clear the text when editing is enabled. filename.innerText=""; filename.setAttribute("contenteditable", "true"); filename.focus(); // Hide the pencil icon editIcon.style.display="none"; // Ensure no border is applied filename.style.border="none";}); filename.addEventListener("blur", function (e){ let newValue=filename.innerText.trim(); // If empty, revert to lastSaved if available, else "Untitled" if (newValue===""){ filename.innerText=lastSaved || "Untitled";} else{ lastSaved=newValue;} filename.setAttribute("contenteditable", "false"); filename.style.border="none"; // Show the pencil icon again editIcon.style.display="inline";});}); document.addEventListener("DOMContentLoaded", function (){ const captainName=document.getElementById("captainName"); // Load saved name from localStorage, if it exists. captainName.innerText=localStorage.getItem("captainName") || "Captain Anonymous"; // Enable editing on double-click and clear the text immediately captainName.addEventListener("dblclick", function (){ captainName.innerText=""; captainName.setAttribute("contenteditable", "true"); captainName.focus(); captainName.style.border="none";}); // When editing is finished, save the value. captainName.addEventListener("blur", function (){ captainName.setAttribute("contenteditable", "false"); captainName.style.border="none"; let newName=captainName.innerText.trim(); // If empty, revert to "Captain Anonymous" if (newName===""){ newName="Captain Anonymous"; captainName.innerText=newName;} localStorage.setItem("captainName", newName);});}); </script><style>.editor-header, .editor-header *{ -webkit-user-select: none !important; -moz-user-select: none !important; -ms-user-select: none !important; user-select: none !important; -webkit-touch-callout: none !important;} .editor-pane, .ace_editor, .ace_content{ -webkit-user-select: none !important; -moz-user-select: none !important; -ms-user-select: none !important; user-select: none !important;} </style><style>.editor-header >div{ pointer-events: none;} </style><style>.ace_editor{ padding-top: 11px;} </style></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Editor</title>
+    <!-- Tailwind CSS v2.2.19 CDN -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <!-- Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <!-- Anime.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <!-- ACE Editor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ext-language_tools.min.js"></script>
+    <!-- js-beautify CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-css.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-beautify@1.14.7/js/lib/beautify-html.js"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      /* Smooth resizing transitions (applied after drag) */
+      .editor-pane,
+      #editor-area,
+      #preview {
+        transition: width 0.2s ease, height 0.2s ease;
+      }
+      :root {
+        --resize-bar-thickness: 20px;
+      }
+      .resize-handle-x {
+        cursor: col-resize;
+        flex: 0 0 var(--resize-bar-thickness) !important;
+        width: var(--resize-bar-thickness) !important;
+        background-color: #1c1c1c;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+      }
+      .resize-handle-y {
+        cursor: row-resize;
+        flex: 0 0 var(--resize-bar-thickness) !important;
+        height: var(--resize-bar-thickness) !important;
+        background-color: #1c1c1c;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+      }
+
+      .editor-pane {
+        background-color: #262626;
+      }
+      .editor-header {
+        background-color: #1c1c1c !important; /* Background for header */
+        color: #ffffff8e !important; /* Text color for header */
+        border-bottom: 1px solid #444444; /* Optional: change border color */
+      }
+      /* Hide native scrollbars */
+      body::-webkit-scrollbar {
+        display: none;
+      }
+      body {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Remove white lines on the code panes */
+      .editor-pane,
+      #html-editor-container,
+      #css-editor-container,
+      #js-editor-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background-clip: padding-box; /* Prevent background bleeding */
+      }
+
+      /* Also ensure the ACE editor container has no extra space */
+      .ace_editor {
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .ace_gutter {
+        background: #1d1e22 !important; /* gutter background */
+        color: #34363e !important; /* line number color */
+      }
+      .editor-header,
+      .editor-header:focus {
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      /* Remove any outline, shadow, or border from the editor header and its children */
+      .editor-header,
+      .editor-header:focus,
+      .editor-header *:focus,
+      .editor-header:active,
+      .editor-header *:active {
+        outline: none !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+
+      /* For horizontal resizer bars (code panes):
+     Add border on the left and right but none on top and bottom */
+      .resize-handle-x {
+        border-left: 1px solid #2d2d2d;
+        border-right: 1px solid #2d2d2d;
+        border-top: none;
+        border-bottom: none;
+      }
+
+      /* For vertical resizer bar (between editors and preview):
+     Add border on the top and bottom but none on left and right */
+      .resize-handle-y {
+        border-top: 1px solid #2d2d2d;
+        border-bottom: 1px solid #2d2d2d;
+        border-left: none;
+        border-right: none;
+      }
+
+      /* Animate the pencil icon on hover */
+      #editIcon:hover {
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.7;
+          transform: scale(1.1);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* For Webkit-based browsers (Chrome, Safari, Edge) */
+      ::-webkit-scrollbar {
+        width: 12px;
+      }
+
+      /* Track */
+      ::-webkit-scrollbar-track {
+        background: #1d1e22;
+      }
+
+      /* Handle */
+      ::-webkit-scrollbar-thumb {
+        background: #666b7a;
+      }
+
+      /* Handle on hover */
+      ::-webkit-scrollbar-thumb:hover {
+        background: #666b7a;
+      }
+
+      /* Make the Ace Editor caret longer and thinner */
+      .ace_editor .ace_cursor {
+        width: 0.5px !important; /* Thinner width */
+        height: 1.65em !important; /* Longer height; adjust value as needed */
+      }
+      [contenteditable]:focus {
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      @keyframes vsCodeCursor {
+        0%,
+        100% {
+          transform: scaleY(0.9);
+        }
+        50% {
+          transform: scaleY(0);
+        }
+      }
+
+      /* Only animate the cursor in the active (focused) Ace editor */
+      .ace_editor.ace_focus .ace_cursor {
+        animation: vsCodeCursor 1s infinite ease-in-out !important;
+      }
+
+      /* Stop animation for inactive editors */
+      .ace_editor:not(.ace_focus) .ace_cursor {
+        animation: none !important;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-900 text-gray-200 flex flex-col h-screen overflow-hidden"
+  >
+    <!-- Header -->
+    <header
+      style="height: 65px"
+      class="bg-black text-white p-3 flex justify-between items-center border-b border-gray-700 shadow-md"
+    >
+      <div class="flex items-center">
+        <span class="material-icons text-red-500 mr-2 text-2xl"
+          >javascript</span
+        >
+        <div>
+          <!-- File name + pencil icon -->
+          <div class="flex items-center">
+            <h1 id="filename" class="text-lg font-semibold">Untitled</h1>
+            <span
+              id="editIcon"
+              class="material-icons cursor-pointer text-base ml-1"
+              >edit</span
+            >
+          </div>
+          <p id="captainName" class="text-xs text-gray-400">
+            Captain Anonymous
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button
+          onclick="prettifyCode()"
+          class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center"
+        >
+          <span class="material-icons mr-1 text-base">done_all</span> Prettify
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Body -->
+    <div class="flex flex-col flex-grow overflow-hidden">
+      <!-- Editors (Top 60% of body) -->
+      <div
+        id="editor-area"
+        class="flex flex-grow h-3/5 border-b border-gray-800"
+      >
+        <!-- HTML Editor -->
+        <div
+          class="flex-1 flex flex-col editor-pane"
+          id="html-editor-container"
+        >
+          <!-- HTML Editor Header -->
+          <div class="editor-header relative border-b border-gray-700" style="height: 35px;">
+            <div
+              class="absolute inset-y-0 left-0 flex items-center px-3"
+              style="background-color: #1d1e22; border-top: 3px solid #34363e"
+            >
+              <svg
+                viewBox="0 0 15 15"
+                class="file-type-icon mr-2 w-5 h-4"
+                id="icon-file-html"
+              >
+                <rect fill="#FF3C41" width="15" height="15" rx="4"></rect>
+                <path
+                  d="M10.97 2.29a.563.563 0 0 0-.495-.29.572.572 0 0 0-.488.277l-5.905 9.86a.565.565 0 0 0-.007.574c.102.18.287.289.495.289a.572.572 0 0 0 .488-.277l5.905-9.86a.565.565 0 0 0 .007-.574"
+                  fill="#28282B"
+                ></path>
+              </svg>
+              <span class="font-medium text-sm">HTML</span>
+            </div>
+          </div>
+          <!-- ACE container for HTML -->
+          <div id="html-editor" class="flex-grow"></div>
+        </div>
+        <div class="resize-handle-x"></div>
+        <!-- CSS Editor -->
+        <div class="flex-1 flex flex-col editor-pane" id="css-editor-container">
+          <!-- CSS Editor Header -->
+          <div class="editor-header relative border-b border-gray-700" style="height: 35px;">
+            <div
+              class="absolute inset-y-0 left-0 flex items-center px-3"
+              style="background-color: #1d1e22; border-top: 3px solid #34363e"
+            >
+              <svg
+                viewBox="0 0 15 15"
+                class="file-type-icon mr-2 w-6 h-4"
+                id="icon-file-css"
+              >
+                <rect fill="#0EBEFF" width="15" height="15" rx="4"></rect>
+                <path
+                  d="M8 8.366l1.845 1.065a.507.507 0 0 0 .686-.181.507.507 0 0 0-.186-.685L8.5 7.5l1.845-1.065a.507.507 0 0 0 .186-.685.507.507 0 0 0-.686-.181L8 6.634v-2.13A.507.507 0 0 0 7.5 4c-.268 0-.5.225-.5.503v2.131L5.155 5.569a.507.507 0 0 0-.686.181.507.507 0 0 0 .186.685L6.5 7.5 4.655 8.565a.507.507 0 0 0-.186.685c.134.232.445.32.686.181L7 8.366v2.13c0 .271.224.504.5.504.268 0 .5-.225.5-.503V8.366z"
+                  fill="#282828"
+                ></path>
+              </svg>
+              <span class="font-medium text-sm">CSS</span>
+            </div>
+          </div>
+          <!-- ACE container for CSS -->
+          <div id="css-editor" class="flex-grow"></div>
+        </div>
+        <div class="resize-handle-x"></div>
+        <!-- JS Editor -->
+        <div class="flex-1 flex flex-col editor-pane" id="js-editor-container">
+          <!-- JS Editor Header -->
+          <div class="editor-header relative border-b border-gray-700" style="height: 35px;">
+            <div
+              class="absolute inset-y-0 left-0 flex items-center px-3"
+              style="background-color: #1d1e22; border-top: 3px solid #34363e"
+            >
+              <svg
+                viewBox="0 0 15 15"
+                class="file-type-icon mr-2 w-6 h-4"
+                id="icon-file-js"
+              >
+                <rect fill="#FCD000" width="15" height="15" rx="4"></rect>
+                <path
+                  d="M6.554 3.705c0 .267-.19.496-.452.543-1.2.217-2.12 1.61-2.12 3.275 0 1.665.92 3.057 2.12 3.274a.554.554 0 0 1-.205 1.087c-1.733-.322-3.022-2.175-3.022-4.361 0-2.187 1.289-4.04 3.022-4.362a.554.554 0 0 1 .657.544zm1.892 0c0-.347.316-.607.657-.544 1.733.322 3.022 2.175 3.022 4.362 0 2.186-1.289 4.04-3.022 4.361a.554.554 0 0 1-.205-1.087c1.2-.217 2.12-1.61 2.12-3.274 0-1.665-.92-3.058-2.12-3.275a.551.551 0 0 1-.452-.543z"
+                  fill="#282828"
+                ></path>
+              </svg>
+              <span class="font-medium text-sm">JS</span>
+            </div>
+          </div>
+          <!-- ACE container for JS -->
+          <div id="js-editor" class="flex-grow"></div>
+        </div>
+      </div>
+      <!-- Vertical Resize Handle between Editors and Preview -->
+      <div class="resize-handle-y"></div>
+      <!-- Preview (Bottom 40% of body) -->
+      <iframe
+        id="preview"
+        class="flex-grow bg-gray-900"
+        style="height: 356px;"
+        sandbox="allow-scripts"
+      ></iframe>
+    </div>
+
+    <!-- Footer -->
+    <footer
+      class="bg-gray-800 text-gray-400 p-2 flex items-center border-t border-gray-700 text-sm"
+    >
+      <button
+        id="toggleConsoleBtn"
+        class="px-3 py-1 rounded-md hover:bg-gray-700 hover:text-white"
+      >
+        Console
+      </button>
+    </footer>
+    <!-- Console Output (Hidden by default) -->
+    <div
+      id="consoleOutput"
+      class="bg-black text-green-400 p-3 text-xs font-mono hidden overflow-y-auto max-h-48 border-t border-gray-700"
+    >
+      <!-- Console output will appear here -->
+    </div>
+
+    <script>
+      // Initialize ACE Editors
+      const htmlEditor = ace.edit("html-editor");
+      htmlEditor.setTheme("ace/theme/twilight");
+      htmlEditor.session.setMode("ace/mode/html");
+      htmlEditor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+      });
+      htmlEditor.setOption("highlightActiveLine", false); // Disable active line highlighting
+      htmlEditor.renderer.setOption("highlightGutterLine", false); // Disable gutter line highlighting
+      htmlEditor.setFontSize(15); // Set font size
+
+      const cssEditor = ace.edit("css-editor");
+      cssEditor.setTheme("ace/theme/twilight");
+      cssEditor.session.setMode("ace/mode/css");
+      cssEditor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+      });
+      cssEditor.setOption("highlightActiveLine", false); // Disable active line highlighting
+      cssEditor.renderer.setOption("highlightGutterLine", false); // Disable gutter line highlighting
+      cssEditor.setFontSize(15); // Set font size
+
+      const jsEditor = ace.edit("js-editor");
+      jsEditor.setTheme("ace/theme/twilight");
+      jsEditor.session.setMode("ace/mode/javascript");
+      jsEditor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+      });
+      jsEditor.setOption("highlightActiveLine", false); // Disable active line highlighting
+      jsEditor.renderer.setOption("highlightGutterLine", false); // Disable gutter line highlighting
+      jsEditor.setFontSize(15); // Set font size
+
+      // Change the background color for each Ace editor container
+      htmlEditor.container.style.backgroundColor = "#1d1e22"; // or any valid CSS color
+      cssEditor.container.style.backgroundColor = "#1d1e22";
+      jsEditor.container.style.backgroundColor = "#1d1e22";
+
+      // Horizontal Resize of Editor Panes (with smoother final transition via CSS)
+      const resizeHandlesX = document.querySelectorAll(".resize-handle-x");
+      const minWidth = 50; // Minimum width for each pane in pixels
+
+      resizeHandlesX.forEach((handle) => {
+        handle.addEventListener("mousedown", (e) => {
+          e.preventDefault(); // Prevent default text selection
+          // Get bounding rectangle of the container holding the panes
+          const containerRect = handle.parentNode.getBoundingClientRect();
+          const containerLeft = containerRect.left;
+          const containerRight = containerRect.right;
+
+          const startX = e.clientX;
+          const prevSibling = handle.previousElementSibling;
+          const nextSibling = handle.nextElementSibling;
+          const startWidthPrev = prevSibling.offsetWidth;
+          const startWidthNext = nextSibling.offsetWidth;
+
+          function onMouseMove(e) {
+            let posX = e.clientX;
+            // Limit posX so the handle stays within the container and respects min widths
+            const limitedX = Math.max(
+              containerLeft + minWidth,
+              Math.min(posX, containerRight - minWidth)
+            );
+            let diffX = limitedX - startX;
+
+            prevSibling.style.flex = "none";
+            nextSibling.style.flex = "none";
+            prevSibling.style.width = startWidthPrev + diffX + "px";
+            nextSibling.style.width = startWidthNext - diffX + "px";
+          }
+
+          function onMouseUp() {
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", onMouseUp);
+          }
+
+          document.addEventListener("mousemove", onMouseMove);
+          document.addEventListener("mouseup", onMouseUp);
+        });
+      });
+
+      // Vertical Resize: between editor area and preview (using pointer events)
+      const resizeHandleY = document.querySelector(".resize-handle-y");
+      const editorArea = document.getElementById("editor-area");
+      const preview = document.getElementById("preview");
+
+      resizeHandleY.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        // Capture pointer so that events keep firing even if the pointer moves off the element
+        resizeHandleY.setPointerCapture(e.pointerId);
+        const startY = e.clientY;
+        const startEditorHeight = editorArea.offsetHeight;
+        const startPreviewHeight = preview.offsetHeight;
+
+        function onPointerMove(e) {
+          const diffY = e.clientY - startY;
+          editorArea.style.height = startEditorHeight + diffY + "px";
+          preview.style.height = startPreviewHeight - diffY + "px";
+        }
+
+        function onPointerUp(e) {
+          resizeHandleY.releasePointerCapture(e.pointerId);
+          document.removeEventListener("pointermove", onPointerMove);
+          document.removeEventListener("pointerup", onPointerUp);
+        }
+
+        document.addEventListener("pointermove", onPointerMove);
+        document.addEventListener("pointerup", onPointerUp);
+      });
+
+      // Working Console Implementation:
+      // The preview iframe’s srcdoc includes a script which overrides window.console to send log/error
+      // messages via postMessage to the parent that appends the messages to the #consoleOutput panel.
+      // Flag to track if the JS editor was modified at least once
+      let jsEdited = false;
+
+      function updatePreview() {
+        const html = htmlEditor.getValue();
+        const css = `<style>${cssEditor.getValue()}</style>`;
+        let jsBlock = "";
+        const currentJS = jsEditor.getValue();
+        // Only inject the JS block after the first edit
+        if (jsEdited) {
+          jsBlock = `<script>
+            window.console = {
+              log: (...args) => parent.postMessage({ type: 'log', args }, '*'),
+              error: (...args) => parent.postMessage({ type: 'error', args }, '*')
+            };
+            try {
+              ${currentJS}
+            } catch(e) {
+              parent.postMessage({ type: 'error', args: [e.toString()] }, '*');
+            }
+          <\/script>`;
+        }
+        preview.srcdoc = html + css + jsBlock;
+      }
+
+      // Listen for JS changes
+      jsEditor.on("change", () => {
+        // On the first change, mark that JS was edited
+        if (!jsEdited) {
+          jsEdited = true;
+        }
+        // Clear console and update preview
+        document.getElementById("consoleOutput").textContent = "";
+        updatePreview();
+      });
+
+      // Update preview on blur for HTML and CSS editors
+      htmlEditor.on("blur", updatePreview);
+      cssEditor.on("blur", updatePreview);
+
+      // (Optional) Call updatePreview() at init—but without JS block injected since jsEdited is false.
+      updatePreview();
+
+      // Listen for console messages from the preview frame.
+      window.addEventListener("message", (e) => {
+        const msg = e.data;
+        const consoleEl = document.getElementById("consoleOutput");
+        if (msg.type === "log") {
+          consoleEl.textContent += msg.args.join(" ") + "\n";
+        } else if (msg.type === "error") {
+          consoleEl.textContent += "Error: " + msg.args.join(" ") + "\n";
+        }
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+      });
+
+      // Toggle Console with Anime.js animation (smooth opening/closing)
+      const toggleBtn = document.getElementById("toggleConsoleBtn");
+      const consoleEl = document.getElementById("consoleOutput");
+      let consoleVisible = false;
+      toggleBtn.addEventListener("click", () => {
+        if (!consoleVisible) {
+          consoleEl.classList.remove("hidden");
+          anime({
+            targets: "#consoleOutput",
+            height: ["0px", "200px"],
+            opacity: [0, 1],
+            duration: 400,
+            easing: "easeOutQuad",
+          });
+        } else {
+          anime({
+            targets: "#consoleOutput",
+            height: 0,
+            opacity: 0,
+            duration: 300,
+            easing: "easeInQuad",
+            complete: () => consoleEl.classList.add("hidden"),
+          });
+        }
+        consoleVisible = !consoleVisible;
+      });
+
+      // Prettify Code Function: formats each editor's content using js-beautify.
+      function prettifyCode() {
+        const htmlCode = htmlEditor.getValue();
+        const cssCode = cssEditor.getValue();
+        const jsCode = jsEditor.getValue();
+        htmlEditor.setValue(html_beautify(htmlCode), -1);
+        cssEditor.setValue(css_beautify(cssCode), -1);
+        jsEditor.setValue(js_beautify(jsCode), -1);
+        updatePreview();
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const filename = document.getElementById("filename");
+        const editIcon = document.getElementById("editIcon");
+        // Initialize lastSaved with the current value or default "Untitled"
+        let lastSaved = filename.innerText.trim() || "Untitled";
+
+        // Ensure editing is off by default.
+        filename.setAttribute("contenteditable", "false");
+
+        editIcon.addEventListener("click", function (e) {
+          // Clear the text when editing is enabled.
+          filename.innerText = "";
+          filename.setAttribute("contenteditable", "true");
+          filename.focus();
+          // Hide the pencil icon
+          editIcon.style.display = "none";
+          // Ensure no border is applied
+          filename.style.border = "none";
+        });
+
+        filename.addEventListener("blur", function (e) {
+          let newValue = filename.innerText.trim();
+          // If empty, revert to lastSaved if available, else "Untitled"
+          if (newValue === "") {
+            filename.innerText = lastSaved || "Untitled";
+          } else {
+            lastSaved = newValue;
+          }
+          filename.setAttribute("contenteditable", "false");
+          filename.style.border = "none";
+          // Show the pencil icon again
+          editIcon.style.display = "inline";
+        });
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const captainName = document.getElementById("captainName");
+        // Load saved name from localStorage, if it exists.
+        captainName.innerText =
+          localStorage.getItem("captainName") || "Captain Anonymous";
+
+        // Enable editing on double-click and clear the text immediately
+        captainName.addEventListener("dblclick", function () {
+          captainName.innerText = "";
+          captainName.setAttribute("contenteditable", "true");
+          captainName.focus();
+          captainName.style.border = "none";
+        });
+
+        // When editing is finished, save the value.
+        captainName.addEventListener("blur", function () {
+          captainName.setAttribute("contenteditable", "false");
+          captainName.style.border = "none";
+          let newName = captainName.innerText.trim();
+          // If empty, revert to "Captain Anonymous"
+          if (newName === "") {
+            newName = "Captain Anonymous";
+            captainName.innerText = newName;
+          }
+          localStorage.setItem("captainName", newName);
+        });
+      });
+    </script>
+    <style>
+      .editor-header,
+      .editor-header * {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+        -webkit-touch-callout: none !important;
+      }
+
+      /* Prevent text selection in the code panes while resizing */
+      .editor-pane,
+      .ace_editor,
+      .ace_content {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+      }
+    </style>
+    <style>
+      .editor-header > div {
+        pointer-events: none;
+      }
+    </style>
+    <style>
+      .ace_editor {
+        padding-top: 11px;
+      }
+    </style>
+  </body>
+</html>
