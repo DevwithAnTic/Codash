@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/svg+xml" href="assets\codash.svg" />
     <!-- Anime.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <!-- ACE Editor CDN -->
@@ -209,9 +210,11 @@
       class="bg-black text-white p-3 flex justify-between items-center border-b border-gray-700 shadow-md"
     >
       <div class="flex items-center">
-        <span class="material-icons text-red-500 mr-2 text-2xl"
-          >javascript</span
-        >
+        <img
+          src="assets/codash.png"
+          alt="Codash"
+          class="w-16 h-50 object-contain"
+        />
         <div>
           <!-- File name + pencil icon -->
           <div class="flex items-center">
@@ -250,7 +253,10 @@
           id="html-editor-container"
         >
           <!-- HTML Editor Header -->
-          <div class="editor-header relative border-b border-gray-700" style="height: 35px;">
+          <div
+            class="editor-header relative border-b border-gray-700"
+            style="height: 35px"
+          >
             <div
               class="absolute inset-y-0 left-0 flex items-center px-3"
               style="background-color: #1d1e22; border-top: 3px solid #34363e"
@@ -276,7 +282,10 @@
         <!-- CSS Editor -->
         <div class="flex-1 flex flex-col editor-pane" id="css-editor-container">
           <!-- CSS Editor Header -->
-          <div class="editor-header relative border-b border-gray-700" style="height: 35px;">
+          <div
+            class="editor-header relative border-b border-gray-700"
+            style="height: 35px"
+          >
             <div
               class="absolute inset-y-0 left-0 flex items-center px-3"
               style="background-color: #1d1e22; border-top: 3px solid #34363e"
@@ -302,7 +311,10 @@
         <!-- JS Editor -->
         <div class="flex-1 flex flex-col editor-pane" id="js-editor-container">
           <!-- JS Editor Header -->
-          <div class="editor-header relative border-b border-gray-700" style="height: 35px;">
+          <div
+            class="editor-header relative border-b border-gray-700"
+            style="height: 35px"
+          >
             <div
               class="absolute inset-y-0 left-0 flex items-center px-3"
               style="background-color: #1d1e22; border-top: 3px solid #34363e"
@@ -331,7 +343,7 @@
       <iframe
         id="preview"
         class="flex-grow bg-gray-900"
-        style="height: 356px;"
+        style="height: 356px"
         sandbox="allow-scripts"
       ></iframe>
     </div>
