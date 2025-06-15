@@ -26,4 +26,4 @@
 
 ## License
 
-MIT © AnTic
+MIT © DevwithAnTic
