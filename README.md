@@ -21,9 +21,9 @@
 * **Show/Hide Console**: Click the **Console** button to view logs/errors.
 * **Prettify**: Click **Prettify** to format all panes.
 * **Resize**: Drag the grey bars between panes to adjust layout.
-* **Rename**: Click the pencil icon next to the title to edit project name or captain name.
+* **Rename**: Click the pencil icon next to the title to edit project name.
 ---
 
 ## License
 
-MIT © Your Name
+MIT © AnTic
